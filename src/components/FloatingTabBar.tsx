@@ -3,7 +3,8 @@ import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { fonts, layout, palette } from '../theme/tokens';
+import { usePlayer } from '../state/player';
+import { fonts, layout, noiseById, palette } from '../theme/tokens';
 import { Glass } from './Glass';
 
 type TabName = 'play' | 'study' | 'programs' | 'customise';
@@ -45,11 +46,12 @@ type Props = BottomTabBarProps & {
 /** Floating glass tab bar (handover §3, §8). Content scrolls under it. */
 export function FloatingTabBar({ state, emitter, navigateToTab, color: colorProp, tone: toneProp }: Props) {
   const insets = useSafeAreaInsets();
-  // Study sits on the brown wash (paper text, dark glass); everything else is light for now.
-  // Step 4 replaces this with the current noise's `on` colour.
-  const onBrown = state.routes[state.index]?.name === 'study';
-  const color = colorProp ?? (onBrown ? palette.paper : palette.ink);
-  const tone = toneProp ?? (onBrown ? 'dark' : 'light');
+  const { noiseId } = usePlayer();
+  const route = state.routes[state.index]?.name;
+  // Text follows the wash behind the bar: Play = current noise, Study = brown, others = paper.
+  const dark = route === 'study' || (route === 'play' && noiseById(noiseId).on === palette.paper);
+  const color = colorProp ?? (dark ? palette.paper : palette.ink);
+  const tone = toneProp ?? (dark ? 'dark' : 'light');
   return (
     <View
       pointerEvents="box-none"

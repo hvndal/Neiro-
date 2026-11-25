@@ -3,6 +3,23 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+// Layout props that must move onto the inner content wrapper so children stay above the glass layers.
+const LAYOUT_KEYS = [
+  'flexDirection', 'alignItems', 'justifyContent', 'gap', 'rowGap', 'columnGap', 'flexWrap',
+  'padding', 'paddingHorizontal', 'paddingVertical', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight',
+] as const;
+
+function splitLayout(style: StyleProp<ViewStyle>): [ViewStyle, ViewStyle] {
+  const flat = (StyleSheet.flatten(style) ?? {}) as Record<string, unknown>;
+  const outer: Record<string, unknown> = {};
+  const inner: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(flat)) {
+    if ((LAYOUT_KEYS as readonly string[]).includes(k)) inner[k] = v;
+    else outer[k] = v;
+  }
+  return [outer as ViewStyle, inner as ViewStyle];
+}
+
 /** True when the user has Reduce Transparency on (iOS). Falls back to solid fills. */
 export function useReduceTransparency(): boolean {
   const [reduce, setReduce] = useState(false);
@@ -59,18 +76,21 @@ export function Glass({ children, style, tint, interactive, solid, tone = 'light
   }
 
   const fill = tone === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.24)';
+  const [outer, inner] = splitLayout(style);
   return (
-    <View style={[styles.base, styles.fallbackShadow, style]}>
+    <View style={[styles.base, styles.fallbackShadow, outer]}>
       <BlurView intensity={16} tint={tone === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: tint ? tint + '33' : fill }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: tint ? tint + (tone === 'dark' ? 'E6' : '33') : fill }]} />
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.rim]} />
-      {children}
+      {/* positioned wrapper: on web, un-positioned children (e.g. <svg>) would paint beneath the layers above */}
+      <View style={[styles.content, inner]}>{children}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   base: { overflow: 'hidden' },
+  content: { flexGrow: 1, flexShrink: 1, position: 'relative' },
   fallbackShadow: {
     shadowColor: '#15171D',
     shadowOpacity: 0.16,
