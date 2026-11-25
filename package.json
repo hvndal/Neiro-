@@ -33,6 +33,7 @@
     "react-native-worklets": "^0.13.0"
   },
   "devDependencies": {
+    "@types/node": "^26.6.10",
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "^58.0.4",
@@ -45,8 +46,9 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "node --test --experimental-strip-types src/**/*.test.ts",
-    "gen:audio": "node --experimental-strip-types scripts/generate-noise.ts"
+    "test": "node --test scripts/*.test.ts",
+    "gen:audio": "node scripts/generate-noise.ts",
+    "verify:audio": "node scripts/verify-noise.ts"
   },
   "private": true
 }

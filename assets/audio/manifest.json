@@ -1,0 +1,81 @@
+{
+  "sampleRate": 48000,
+  "loopSamples": 2880000,
+  "padSamples": 48000,
+  "channels": 2,
+  "codec": "aac vbr q1",
+  "targetLufs": -23,
+  "note": "File = [PAD tail copy][LOOP][PAD head copy]. Signal is exactly periodic over LOOP samples. Play [PAD, PAD+LOOP) and crossfade (linear; the overlapped copies are identical) across the boundary.",
+  "files": {
+    "white": {
+      "file": "white.m4a",
+      "lufs": -23,
+      "truePeakDb": -14.5,
+      "gainDb": -9,
+      "bytes": 889257,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.15
+    },
+    "pink": {
+      "file": "pink.m4a",
+      "lufs": -23.1,
+      "truePeakDb": -12.6,
+      "gainDb": -6.9,
+      "bytes": 893249,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.18
+    },
+    "brown": {
+      "file": "brown.m4a",
+      "lufs": -23.1,
+      "truePeakDb": -8.9,
+      "gainDb": -3.1,
+      "bytes": 1024686,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.17
+    },
+    "green": {
+      "file": "green.m4a",
+      "lufs": -23.1,
+      "truePeakDb": -12.1,
+      "gainDb": -6.8,
+      "bytes": 909344,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.1
+    },
+    "blue": {
+      "file": "blue.m4a",
+      "lufs": -23.2,
+      "truePeakDb": -14.6,
+      "gainDb": -9.3,
+      "bytes": 1059401,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.19
+    },
+    "violet": {
+      "file": "violet.m4a",
+      "lufs": -23.1,
+      "truePeakDb": -14.8,
+      "gainDb": -9.3,
+      "bytes": 1055606,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.19
+    },
+    "grey": {
+      "file": "grey.m4a",
+      "lufs": -23.1,
+      "truePeakDb": -12.4,
+      "gainDb": -7.6,
+      "bytes": 990180,
+      "aacLagSamples": 0,
+      "extraDecodedFrames": 768,
+      "levelDriftDb": 0.3
+    }
+  }
+}
