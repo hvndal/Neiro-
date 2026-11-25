@@ -1,9 +1,11 @@
+import { useIsFocused } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { GlassPill } from '../../components/GlassPill';
 import { Grain } from '../../components/Grain';
+import { LivingWash } from '../../skia/LivingWash';
 import { fonts, layout, noiseById, palette, textStyle } from '../../theme/tokens';
 
 const MODES = [
@@ -17,6 +19,7 @@ const MODES = [
 // Layout only. Real timers (timestamp-based + notifications) are the Study step.
 export default function Study() {
   const insets = useSafeAreaInsets();
+  const focused = useIsFocused();
   const brown = noiseById('brown');
   const pink = noiseById('pink');
   const [mode, setMode] = useState<string>('pomodoro');
@@ -24,6 +27,7 @@ export default function Study() {
 
   return (
     <View style={[styles.root, { backgroundColor: brown.hex, paddingTop: insets.top + 12 }]}>
+      <LivingWash noise="brown" playing active={focused} />
       <View style={styles.top}>
         <Text accessibilityRole="header" style={[textStyle('title'), { fontSize: 22, lineHeight: 26, letterSpacing: -0.44, color: paper }]}>
           study

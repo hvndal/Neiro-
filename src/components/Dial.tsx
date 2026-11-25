@@ -7,6 +7,13 @@ import { Glass } from './Glass';
 const BOX = 320;
 const DOT_RADIUS = 148;
 const ARC_R = 130;
+export const LENS_R = 100;
+
+/** Screen position of detent dot `index`, given the dial box's top-left corner. */
+export const dotCentre = (index: number, boxX: number, boxY: number) => {
+  const a = ((-90 + index * 30) * Math.PI) / 180;
+  return { x: boxX + BOX / 2 + DOT_RADIUS * Math.sin(a), y: boxY + BOX / 2 - DOT_RADIUS * Math.cos(a) };
+};
 
 /** Point on a circle, angle clockwise from 12 o'clock. */
 const polar = (deg: number, r: number) => {
@@ -25,7 +32,8 @@ type Props = {
   playing: boolean;
   /** 0–1 */
   volume?: number;
-  wash: string;
+  /** true when the lens is drawn by the Skia wash shader (real refraction); false = RN glass view */
+  shaderLens?: boolean;
   onSelect: (id: NoiseId, locked: boolean) => void;
   onToggle: () => void;
 };
@@ -34,7 +42,7 @@ type Props = {
  * The main control (handover §7, Play). 7 detent dots on the top arc (−90° → +90°, 30° apart, noise order),
  * a 240° volume arc, a clear-glass lens whose notch points at the active dot, and a dark-glass play/pause centre.
  */
-export function Dial({ noiseId, playing, volume = 0.7, wash, onSelect, onToggle }: Props) {
+export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSelect, onToggle }: Props) {
   const index = NOISES.findIndex((n) => n.id === noiseId);
   const knobDeg = -90 + index * 30;
   const sweep = 240;
@@ -81,9 +89,15 @@ export function Dial({ noiseId, playing, volume = 0.7, wash, onSelect, onToggle 
       })}
 
       <View pointerEvents="none" style={[styles.lensWrap, { transform: [{ rotate: `${knobDeg}deg` }] }]}>
-        <Glass tone="light" style={styles.lens}>
-          <View style={styles.notch} />
-        </Glass>
+        {shaderLens ? (
+          <View style={styles.lens}>
+            <View style={styles.notch} />
+          </View>
+        ) : (
+          <Glass tone="light" style={styles.lens}>
+            <View style={styles.notch} />
+          </Glass>
+        )}
       </View>
 
       <Pressable
@@ -117,7 +131,7 @@ const styles = StyleSheet.create({
   // 2px ink ring, separated from the dot by a 2px wash-coloured gap (set via `gap` below)
   selRing: { position: 'absolute', left: -5, top: -5, right: -5, bottom: -5, borderRadius: 99, borderWidth: 2 },
   lensWrap: { position: 'absolute', left: 60, top: 60, width: 200, height: 200 },
-  lens: { width: 200, height: 200, borderRadius: 100, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.7)' },
+  lens: { width: 200, height: 200, borderRadius: 100 },
   notch: { position: 'absolute', left: 96, top: 14, width: 8, height: 26, borderRadius: 4, backgroundColor: palette.ink },
   centre: { position: 'absolute', left: BOX / 2 - 44, top: BOX / 2 - 44, width: 88, height: 88 },
   centreGlass: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },

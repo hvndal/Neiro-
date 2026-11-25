@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/m-plus-rounded-1c": "^0.4.4",
     "@expo-google-fonts/nunito": "^0.4.2",
+    "@shopify/react-native-skia": "^2.14.0",
     "expo": "~58.0.26",
     "expo-audio": "~58.0.12",
     "expo-blur": "~58.0.6",
@@ -17,6 +18,7 @@
     "expo-linking": "~58.0.17",
     "expo-notifications": "~58.1.9",
     "expo-router": "~58.0.32",
+    "expo-sensors": "~58.0.5",
     "expo-status-bar": "~58.0.5",
     "expo-system-ui": "~58.0.7",
     "react": "19.3.0",
@@ -46,9 +48,10 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "node --test scripts/*.test.ts",
+    "test": "node --test scripts/*.test.ts src/skia/*.test.ts",
     "gen:audio": "node scripts/generate-noise.ts",
-    "verify:audio": "node scripts/verify-noise.ts"
+    "verify:audio": "node scripts/verify-noise.ts",
+    "setup:web": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/canvaskit.wasm"
   },
   "private": true
 }
