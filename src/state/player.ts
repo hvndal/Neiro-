@@ -2,9 +2,9 @@ import { useSyncExternalStore } from 'react';
 import type { NoiseId } from '../theme/tokens';
 
 // Tiny external store (no dependency). Audio wiring arrives in the audio-engine step.
-type PlayerState = { noiseId: NoiseId; playing: boolean };
+type PlayerState = { noiseId: NoiseId; playing: boolean; started: boolean };
 
-let state: PlayerState = { noiseId: 'pink', playing: false }; // first launch: pink loaded, first tap plays
+let state: PlayerState = { noiseId: 'pink', playing: false, started: false }; // first launch: pink loaded, first tap plays
 const listeners = new Set<() => void>();
 
 const set = (patch: Partial<PlayerState>) => {
@@ -21,7 +21,7 @@ export const player = {
     };
   },
   setNoise: (noiseId: NoiseId) => set({ noiseId }),
-  toggle: () => set({ playing: !state.playing }),
+  toggle: () => set({ playing: !state.playing, started: state.started || !state.playing }),
 };
 
 export function usePlayer(): PlayerState {

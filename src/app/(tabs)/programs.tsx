@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { BackButton } from '../../components/BackButton';
 import { Wash } from '../../components/Wash';
 import { fonts, layout, noiseById, palette, textStyle, type NoiseId } from '../../theme/tokens';
 
@@ -24,7 +23,6 @@ export default function Programs() {
     <View style={styles.root}>
       <Wash />
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
-        <BackButton />
         <View style={{ gap: 8 }}>
           <Text accessibilityRole="header" style={[textStyle('title'), { color: palette.ink }]}>
             programs

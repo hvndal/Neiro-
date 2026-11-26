@@ -48,7 +48,7 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "node --test scripts/*.test.ts src/skia/*.test.ts",
+    "test": "node --test scripts/*.test.ts src/skia/*.test.ts src/dial/*.test.ts",
     "gen:audio": "node scripts/generate-noise.ts",
     "verify:audio": "node scripts/verify-noise.ts",
     "setup:web": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/canvaskit.wasm"

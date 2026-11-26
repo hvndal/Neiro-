@@ -43,8 +43,8 @@ type Props = BottomTabBarProps & {
   tone?: 'light' | 'dark';
 };
 
-/** Floating glass tab bar (handover §3, §8). Content scrolls under it. */
-export function FloatingTabBar({ state, emitter, navigateToTab, color: colorProp, tone: toneProp }: Props) {
+/** Drawn tab bar for web previews only. iOS and Android use the system tab bar (see (tabs)/_layout.tsx). */
+export function WebTabBar({ state, emitter, navigateToTab, color: colorProp, tone: toneProp }: Props) {
   const insets = useSafeAreaInsets();
   const { noiseId } = usePlayer();
   const route = state.routes[state.index]?.name;

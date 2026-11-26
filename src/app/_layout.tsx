@@ -22,7 +22,10 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: palette.paper } }}>
           <Stack.Screen name="(tabs)" />
           {/* Pro opens as a modal sheet: "get pro", any locked colour/mode, Customise (handover §3) */}
-          <Stack.Screen name="pro" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen
+            name="pro"
+            options={{ presentation: 'formSheet', sheetAllowedDetents: [0.94], sheetGrabberVisible: true, sheetCornerRadius: 28 }}
+          />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

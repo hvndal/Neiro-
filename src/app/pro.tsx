@@ -10,9 +10,9 @@ import { fonts, NOISES, palette, textStyle } from '../theme/tokens';
 
 const PERKS = [
   'four more noise colours',
-  'eight app icons',
+  'seven colour app icons (the rings are free)',
   'dial finishes: ceramic, brass, walnut, chrome',
-  'grain styles: 16mm, 35mm, vhs',
+  'grain styles: 35mm, vhs',
   'study modes: 50/10, 52/17, flowtime, custom',
   'custom tints, saved mixes, wallpapers',
 ];
