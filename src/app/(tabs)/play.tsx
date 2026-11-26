@@ -1,5 +1,5 @@
 import { router, useIsFocused } from 'expo-router';
-import { useCallback, useRef, useState, type ComponentRef } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Dial, LENS_R, dotCentre } from '../../components/Dial';
@@ -18,13 +18,22 @@ export default function Play() {
   const dark = noise.on === palette.paper;
   const proCount = NOISES.filter((n) => n.pro).length;
 
-  // Dial box position in screen coordinates: the shader draws the glass lens and the reveal from there.
+  // Dial box position in the screen root's coordinate space (the shader canvas fills the root), so the glass lens
+  // and the reveal origin line up. Measured relative to the root, not the window: window coordinates are wrong while
+  // a sheet or tab transition is running. Re-measured whenever the screen regains focus.
+  const rootRef = useRef<ComponentRef<typeof View>>(null);
   const dialRef = useRef<ComponentRef<typeof View>>(null);
   const [box, setBox] = useState<{ x: number; y: number } | null>(null);
   const [revealFrom, setRevealFrom] = useState<{ x: number; y: number } | null>(null);
   const measure = useCallback(() => {
-    dialRef.current?.measureInWindow((x, y) => setBox((b) => (b && b.x === x && b.y === y ? b : { x, y })));
+    const root = rootRef.current;
+    const dial = dialRef.current;
+    if (!root || !dial) return;
+    dial.measureLayout(root, (x, y) => setBox((b) => (b && b.x === x && b.y === y ? b : { x, y })));
   }, []);
+  useEffect(() => {
+    if (focused) measure();
+  }, [focused, measure]);
 
   const select = (id: NoiseId, locked: boolean) => {
     if (locked) return router.push('/pro');
@@ -33,7 +42,7 @@ export default function Play() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: noise.hex, paddingTop: insets.top + 12 }]}>
+    <View ref={rootRef} onLayout={measure} collapsable={false} style={[styles.root, { backgroundColor: noise.hex, paddingTop: insets.top + 12 }]}>
       <LivingWash
         noise={noiseId}
         playing={playing}

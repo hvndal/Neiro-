@@ -1,7 +1,7 @@
 import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
 import { Accelerometer } from 'expo-sensors';
 import { useEffect } from 'react';
-import { AccessibilityInfo, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet, View } from 'react-native';
 import { Easing, useDerivedValue, useFrameCallback, useSharedValue, withTiming } from 'react-native-reanimated';
 import { noiseById } from '../theme/tokens';
 import { washColours, type RGB } from './colours';
@@ -87,6 +87,7 @@ export default function LivingWashImpl({ noise, playing, lens = null, revealFrom
 
   // Tilt moves the lens highlight like a real glass disc under a window.
   useEffect(() => {
+    if (Platform.OS === 'web') return; // no accelerometer in browsers (previews)
     let sub: { remove: () => void } | undefined;
     let cancelled = false;
     Accelerometer.isAvailableAsync().then((ok) => {
