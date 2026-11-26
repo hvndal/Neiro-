@@ -145,7 +145,7 @@ export default function Play() {
         <View style={styles.readout} accessibilityLiveRegion="polite">
           {hovered ? (
             <Animated.View key={hovered.id} entering={FadeIn.duration(120)} style={styles.readoutRow}>
-              <View style={[styles.readoutDot, { backgroundColor: hovered.hex }]} />
+              <View style={[styles.readoutDot, { backgroundColor: hovered.hex, borderColor: noise.on }]} />
               <Text style={[textStyle('label'), { color: noise.on }]}>
                 {hovered.id}
                 {hovered.pro && !isPro ? '  ·  pro' : ''}
@@ -173,5 +173,5 @@ const styles = StyleSheet.create({
   dialWrap: { alignItems: 'center', gap: 10 },
   readout: { height: 24, alignItems: 'center', justifyContent: 'center' },
   readoutRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  readoutDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1.5, borderColor: 'rgba(21,23,29,0.25)' },
+  readoutDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1.5 },
 });
