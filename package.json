@@ -10,6 +10,7 @@
     "expo-audio": "~58.0.12",
     "expo-blur": "~58.0.6",
     "expo-constants": "~58.0.16",
+    "expo-dev-client": "~58.0.21",
     "expo-font": "~58.0.12",
     "expo-glass-effect": "~58.0.5",
     "expo-haptics": "~58.0.8",
@@ -48,10 +49,12 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "node --test scripts/*.test.ts src/skia/*.test.ts src/dial/*.test.ts",
+    "test": "node --test scripts/*.test.ts src/*/*.test.ts",
     "gen:audio": "node scripts/generate-noise.ts",
     "verify:audio": "node scripts/verify-noise.ts",
-    "setup:web": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/canvaskit.wasm"
+    "setup:web": "mkdir -p public && cp node_modules/canvaskit-wasm/bin/full/canvaskit.wasm public/canvaskit.wasm",
+    "verify": "tsc --noEmit && eslint . && npm test && node scripts/verify-noise.ts",
+    "bundle:check": "expo export --platform ios --platform android --output-dir /tmp/neiro-export"
   },
   "private": true
 }

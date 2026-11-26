@@ -1,11 +1,7 @@
 import { useSyncExternalStore } from 'react';
-import { Platform } from 'react-native';
 
-/**
- * Skia is ready immediately on iOS/Android. On web (previews, screenshots) CanvasKit must load first, and
- * nothing may import @shopify/react-native-skia before that — so Skia code is lazy-loaded behind this flag.
- */
-let ready = Platform.OS !== 'web';
+/** Skia is ready immediately on iOS and Android (the web loader lives in ready.web.ts). */
+let ready = true;
 const listeners = new Set<() => void>();
 
 export const skiaReady = {
@@ -24,10 +20,5 @@ export const skiaReady = {
 
 export const useSkiaReady = () => useSyncExternalStore(skiaReady.subscribe, skiaReady.get, skiaReady.get);
 
-/** Call once at app start. No-op on native. */
-export async function initSkia(): Promise<void> {
-  if (Platform.OS !== 'web' || ready) return;
-  const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web');
-  await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
-  skiaReady.set(true);
-}
+/** No-op on native. */
+export async function initSkia(): Promise<void> {}

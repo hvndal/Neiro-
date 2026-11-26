@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { startAudio } from '../audio/engine';
 import { Launch } from '../motion/Launch';
 import { initSkia } from '../skia/ready';
 import { Watchers } from '../state/Watchers';
@@ -17,6 +18,7 @@ export default function RootLayout() {
   const done = useCallback(() => setLaunching(false), []);
   useEffect(() => {
     initSkia().catch((e) => console.warn('[neiro] Skia web init failed', e));
+    startAudio().catch((e) => console.warn('[neiro] audio failed to start', e));
   }, []);
   if (!loaded) return null;
 

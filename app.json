@@ -12,7 +12,14 @@
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIRequiresFullScreen": false
+      },
+      "buildNumber": "1",
+      "requireFullScreen": false,
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -23,7 +30,14 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.neiro.app"
+      "package": "com.neiro.app",
+      "versionCode": 1,
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,16 +47,31 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      "expo-dev-client",
       [
         "expo-audio",
         {
           "enableBackgroundPlayback": true
         }
       ],
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "color": "#FF7AA2"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "description": "Noise colours for sleep and focus. Turn the dial; the screen becomes the colour.",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
     }
   }
 }
