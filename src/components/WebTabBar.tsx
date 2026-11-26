@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { usePlayer } from '../state/player';
+import { useStudy } from '../state/study';
 import { fonts, layout, noiseById, palette } from '../theme/tokens';
 import { Glass } from './Glass';
 
@@ -49,7 +50,8 @@ export function WebTabBar({ state, emitter, navigateToTab, color: colorProp, ton
   const { noiseId } = usePlayer();
   const route = state.routes[state.index]?.name;
   // Text follows the wash behind the bar: Play = current noise, Study = brown, others = paper.
-  const dark = route === 'study' || (route === 'play' && noiseById(noiseId).on === palette.paper);
+  const studyPhase = useStudy().phase;
+  const dark = (route === 'study' && studyPhase !== 'break') || (route === 'play' && noiseById(noiseId).on === palette.paper);
   const color = colorProp ?? (dark ? palette.paper : palette.ink);
   const tone = toneProp ?? (dark ? 'dark' : 'light');
   return (

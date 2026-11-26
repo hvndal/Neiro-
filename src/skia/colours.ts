@@ -7,6 +7,9 @@ export const hexToRgb = (hex: string): RGB => {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 };
 
+export const rgbToHex = ([r, g, b]: RGB) =>
+  '#' + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+
 const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 
 export type WashColours = { base: RGB; deep: RGB; light: RGB };
@@ -42,4 +45,16 @@ export function washColours(id: NoiseId): WashColours {
   return dark
     ? { base, deep: limitedMix(base, [0, 0, 0], 0.14, text, min), light: limitedMix(base, [1, 1, 1], 0.1, text, min) }
     : { base, deep: limitedMix(base, [0, 0, 0], 0.07, text, min), light: limitedMix(base, [1, 1, 1], 0.2, text, min) };
+}
+
+const PAPER: RGB = hexToRgb('#F7F5F0');
+
+/**
+ * Soft wash for browsing screens (Programs, Customise, Pro, sheets): paper tinted by the playing colour,
+ * so glass has something to show and the app keeps one identity (handover §8). Ink and muted text must
+ * stay legible on every tone (colours.test.ts).
+ */
+export function softWashColours(id: NoiseId): WashColours {
+  const n = hexToRgb(noiseById(id).hex);
+  return { base: mix(PAPER, n, 0.12), deep: mix(PAPER, n, 0.26), light: mix(PAPER, [1, 1, 1], 0.7) };
 }

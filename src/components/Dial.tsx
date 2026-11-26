@@ -2,10 +2,12 @@ import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  FadeIn, FadeOut, ZoomIn, useAnimatedReaction, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring,
+} from 'react-native-reanimated';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
-import { DEAD_ZONE, SENSITIVITY, angleFor, angleOf, crossings, rubberBand, settleIndex, shortestDelta } from '../dial/physics';
+import { DEAD_ZONE, SENSITIVITY, angleFor, angleOf, crossings, indexAt, rubberBand, settleIndex, shortestDelta } from '../dial/physics';
 import { NOISES, palette, type NoiseId } from '../theme/tokens';
 import { Glass } from './Glass';
 
@@ -61,6 +63,8 @@ type Props = {
   shaderLens?: boolean;
   onSelect: (id: NoiseId, locked: boolean) => void;
   onToggle: () => void;
+  /** while turning: the colour the knob points at (null when released) — drives the live readout */
+  onHover?: (index: number | null) => void;
 };
 
 /**
@@ -69,7 +73,8 @@ type Props = {
  *  - Past either end it stretches and springs back; releasing on a Pro colour latches, then returns and opens Pro.
  *  - Tap a dot to jump. VoiceOver: the lens is an adjustable (swipe up/down = next/previous colour).
  */
-export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSelect, onToggle }: Props) {
+export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSelect, onToggle, onHover }: Props) {
+  const reduce = useReducedMotion();
   const index = NOISES.findIndex((n) => n.id === noiseId);
   const knob = useSharedValue(angleFor(index));
   const dragging = useSharedValue(false);
@@ -79,6 +84,8 @@ export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSel
   const hasTouch = useSharedValue(false);
   const lastTime = useSharedValue(0);
   const omega = useSharedValue(0);
+  const hover = useSharedValue(-1);
+  const hoverJS = useCallback((i: number) => onHover?.(i < 0 ? null : i), [onHover]);
 
   const commit = useCallback(
     (i: number) => {
@@ -119,6 +126,12 @@ export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSel
       const c = crossings(prev, now);
       if (c.detent > 0) scheduleOnRN(tick, 'detent');
       else if (c.sub > 0) scheduleOnRN(tick, 'sub');
+      // live readout: only report when the colour under the knob changes, and only while a finger is on it
+      const h = dragging.get() ? indexAt(now) : -1;
+      if (h !== hover.get()) {
+        hover.set(h);
+        scheduleOnRN(hoverJS, h);
+      }
     },
   );
 
@@ -162,6 +175,8 @@ export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSel
       'worklet';
       if (!dragging.get()) return;
       dragging.set(false);
+      hover.set(-1);
+      scheduleOnRN(hoverJS, -1);
       const i = settleIndex(knob.get(), omega.get() * SENSITIVITY);
       knob.set(withSpring(angleFor(i), SETTLE, (finished) => {
         if (finished) scheduleOnRN(commit, i);
@@ -236,16 +251,24 @@ export function Dial({ noiseId, playing, volume = 0.7, shaderLens = false, onSel
 
         <Pressable accessibilityRole="button" accessibilityLabel={playing ? 'Pause' : 'Play'} onPress={onToggle} style={styles.centre}>
           <Glass tone="dark" tint={palette.ink} solid="rgba(21,23,29,0.9)" interactive style={styles.centreGlass}>
-            <Svg width={32} height={32} viewBox="0 0 32 32">
-              {playing ? (
-                <>
-                  <Rect x={7} y={2} width={8} height={28} rx={3} fill={palette.paper} />
-                  <Rect x={19} y={2} width={8} height={28} rx={3} fill={palette.paper} />
-                </>
-              ) : (
-                <Path d="M9 3.5v25l21-12.5z" fill={palette.paper} />
-              )}
-            </Svg>
+            {/* the glyph morphs: the new one zooms in as the old fades (handover §9) */}
+            <Animated.View
+              key={playing ? 'pause' : 'play'}
+              entering={reduce ? FadeIn.duration(150) : ZoomIn.duration(220)}
+              exiting={FadeOut.duration(120)}
+              style={styles.glyph}
+            >
+              <Svg width={32} height={32} viewBox="0 0 32 32">
+                {playing ? (
+                  <>
+                    <Rect x={7} y={2} width={8} height={28} rx={3} fill={palette.paper} />
+                    <Rect x={19} y={2} width={8} height={28} rx={3} fill={palette.paper} />
+                  </>
+                ) : (
+                  <Path d="M9 3.5v25l21-12.5z" fill={palette.paper} />
+                )}
+              </Svg>
+            </Animated.View>
           </Glass>
         </Pressable>
       </View>
@@ -261,4 +284,5 @@ const styles = StyleSheet.create({
   notch: { position: 'absolute', left: 96, top: 14, width: 8, height: 26, borderRadius: 4, backgroundColor: palette.ink },
   centre: { position: 'absolute', left: C - 44, top: C - 44, width: 88, height: 88 },
   centreGlass: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
+  glyph: { position: 'absolute', width: 88, height: 88, alignItems: 'center', justifyContent: 'center' },
 });

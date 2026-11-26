@@ -3,6 +3,7 @@ import { NativeTabs } from 'expo-router/native-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { player, usePlayer } from '../state/player';
+import { useNow } from '../state/useNow';
 import { fonts, noiseById, palette } from '../theme/tokens';
 
 /**
@@ -10,7 +11,9 @@ import { fonts, noiseById, palette } from '../theme/tokens';
  * glass capsule docked above the tabs (it collapses inline when the tab bar minimises). Tap = open Play.
  */
 export function NowPlaying() {
-  const { noiseId, playing } = usePlayer();
+  const { noiseId, playing, sleepEndsAt } = usePlayer();
+  const now = useNow(30_000, sleepEndsAt !== null);
+  const status = !playing ? 'paused' : sleepEndsAt ? `sleep · ${Math.max(1, Math.ceil((sleepEndsAt - now) / 60_000))} min` : 'playing';
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const noise = noiseById(noiseId);
 
@@ -21,7 +24,7 @@ export function NowPlaying() {
         <Text numberOfLines={1} style={styles.title}>
           {noise.id} noise
         </Text>
-        {placement === 'regular' && <Text style={styles.sub}>{playing ? 'playing' : 'paused'}</Text>}
+        {placement === 'regular' && <Text style={styles.sub}>{status}</Text>}
       </Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={playing ? 'Pause' : 'Play'} hitSlop={8} onPress={player.toggle} style={styles.btn}>
         <Svg width={18} height={18} viewBox="0 0 32 32">

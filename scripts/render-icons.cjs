@@ -1,4 +1,4 @@
-/* global __dirname */
+/* global __dirname, Buffer */
 // Renders neiro's app icons → assets/icons/*.png (+ the Expo icon slots in assets/).
 //   node scripts/render-icons.cjs        (needs Playwright + Chromium; not a project dependency)
 //
@@ -74,5 +74,25 @@ const page = (bg, inner, extra = '') =>
     true,
   );
   await shot(page('transparent', ringMark(560)), path.join(ASSETS, 'splash-icon.png'), true);
+  // UI thumbnails (Customise tiles): 192 px, downscaled in the browser with high-quality smoothing.
+  const THUMBS = path.join(OUT, 'thumbs');
+  fs.mkdirSync(THUMBS, { recursive: true });
+  for (const name of ['rings', ...Object.keys(COLOURS)]) {
+    const src = fs.readFileSync(path.join(OUT, `${name}.png`)).toString('base64');
+    const dataUrl = await p.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = document.createElement('canvas');
+      c.width = c.height = 192;
+      const g = c.getContext('2d');
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(img, 0, 0, 192, 192);
+      return c.toDataURL('image/png');
+    }, src);
+    fs.writeFileSync(path.join(THUMBS, `${name}.png`), Buffer.from(dataUrl.split(',')[1], 'base64'));
+    console.log('wrote', `assets/icons/thumbs/${name}.png`);
+  }
   await browser.close();
 })();

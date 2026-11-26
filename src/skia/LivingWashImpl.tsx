@@ -3,8 +3,7 @@ import { Accelerometer } from 'expo-sensors';
 import { useEffect } from 'react';
 import { AccessibilityInfo, Platform, StyleSheet, View } from 'react-native';
 import { Easing, useDerivedValue, useFrameCallback, useSharedValue, withTiming } from 'react-native-reanimated';
-import { noiseById } from '../theme/tokens';
-import { washColours, type RGB } from './colours';
+import { hexToRgb, rgbToHex, softWashColours, washColours, type RGB } from './colours';
 import type { LivingWashProps } from './LivingWash';
 import { WASH_SKSL } from './washShader';
 
@@ -16,8 +15,20 @@ const IDLE_SPEED = 0.35;
 const PLAY_SPEED = 1;
 
 type Tones = { base: RGB; deep: RGB; light: RGB };
+const tonesFor = (noise: LivingWashProps['noise'], variant: LivingWashProps['variant']) =>
+  variant === 'soft' ? softWashColours(noise) : washColours(noise);
 
-export default function LivingWashImpl({ noise, playing, lens = null, revealFrom = null, dim = 0, active = true }: LivingWashProps) {
+export default function LivingWashImpl({
+  noise,
+  playing,
+  variant = 'full',
+  lens = null,
+  lensTint = null,
+  revealFrom = null,
+  revealMs = 700,
+  dim = 0,
+  active = true,
+}: LivingWashProps) {
   const size = useSharedValue({ width: 0, height: 0 });
   const phase = useSharedValue(0);
   const speed = useSharedValue(IDLE_SPEED);
@@ -26,12 +37,16 @@ export default function LivingWashImpl({ noise, playing, lens = null, revealFrom
   const reduce = useSharedValue(false);
   const live = useSharedValue(active);
 
-  const cur = useSharedValue<Tones>(washColours(noise));
-  const prev = useSharedValue<Tones>(washColours(noise));
+  const cur = useSharedValue<Tones>(tonesFor(noise, variant));
+  const prev = useSharedValue<Tones>(tonesFor(noise, variant));
   const reveal = useSharedValue(1);
   const origin = useSharedValue({ x: 0, y: 0 });
 
   const lensSV = useSharedValue({ x: 0, y: 0, r: 0, on: 0 });
+  const tintR = useSharedValue(1);
+  const tintG = useSharedValue(1);
+  const tintB = useSharedValue(1);
+  const tintAmt = useSharedValue(0);
   const tiltX = useSharedValue(0);
   const tiltY = useSharedValue(0);
 
@@ -46,14 +61,14 @@ export default function LivingWashImpl({ noise, playing, lens = null, revealFrom
     };
   }, [reduce]);
 
-  // Flow clock, capped at FPS_CAP, paused when off-screen or in the background.
+  // Flow clock, capped at FPS_CAP, paused when off-screen.
   const acc = useSharedValue(0);
   const clock = useFrameCallback((f) => {
     'worklet';
-    acc.value += f.timeSincePreviousFrame ?? 16;
-    if (acc.value < 1000 / FPS_CAP) return;
-    if (live.value && !reduce.value) phase.value += (acc.value / 1000) * speed.value;
-    acc.value = 0;
+    acc.set(acc.get() + (f.timeSincePreviousFrame ?? 16));
+    if (acc.get() < 1000 / FPS_CAP) return;
+    if (live.get() && !reduce.get()) phase.set(phase.get() + (acc.get() / 1000) * speed.get());
+    acc.set(0);
   });
   useEffect(() => {
     live.set(active);
@@ -69,25 +84,36 @@ export default function LivingWashImpl({ noise, playing, lens = null, revealFrom
     dimSV.set(withTiming(dim, { duration: 1500 }));
   }, [dim, dimSV]);
 
-  // Colour change: the new wash expands from the tapped dot (handover §9: wash 700 ms).
-  const shown = useSharedValue(noise);
+  // Colour change: the new wash expands from where the change came from (the tapped dot, or the centre).
+  const shown = useSharedValue(`${noise}:${variant}`);
   useEffect(() => {
-    if (shown.get() === noise) return;
-    shown.set(noise);
+    const key = `${noise}:${variant}`;
+    if (shown.get() === key) return;
+    shown.set(key);
     prev.set(cur.get());
-    cur.set(washColours(noise));
-    if (revealFrom) origin.set(revealFrom);
+    cur.set(tonesFor(noise, variant));
+    origin.set(revealFrom ?? { x: 0, y: 0 });
     reveal.set(0);
-    reveal.set(reduce.get() ? 1 : withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
-  }, [noise, revealFrom, cur, prev, origin, reveal, shown, reduce]);
+    reveal.set(reduce.get() ? 1 : withTiming(1, { duration: revealMs, easing: Easing.out(Easing.cubic) }));
+  }, [noise, variant, revealFrom, revealMs, cur, prev, origin, reveal, shown, reduce]);
 
   useEffect(() => {
     lensSV.set(lens ? { x: lens.x, y: lens.y, r: lens.r, on: 1 } : { x: 0, y: 0, r: 1, on: 0 });
   }, [lens, lensSV]);
 
+  // Dial finish: tint the glass, eased so a change in Customise is seen settling in.
+  useEffect(() => {
+    const [r, g, b] = hexToRgb(lensTint?.tint ?? '#FFFFFF');
+    const cfg = { duration: 600, easing: Easing.out(Easing.cubic) };
+    tintR.set(withTiming(r, cfg));
+    tintG.set(withTiming(g, cfg));
+    tintB.set(withTiming(b, cfg));
+    tintAmt.set(withTiming(lensTint?.amount ?? 0, cfg));
+  }, [lensTint, tintR, tintG, tintB, tintAmt]);
+
   // Tilt moves the lens highlight like a real glass disc under a window.
   useEffect(() => {
-    if (Platform.OS === 'web') return; // no accelerometer in browsers (previews)
+    if (Platform.OS === 'web' || !lens) return; // no accelerometer in browsers; no lens, no highlight to move
     let sub: { remove: () => void } | undefined;
     let cancelled = false;
     Accelerometer.isAvailableAsync().then((ok) => {
@@ -103,7 +129,7 @@ export default function LivingWashImpl({ noise, playing, lens = null, revealFrom
       cancelled = true;
       sub?.remove();
     };
-  }, [reduce, tiltX, tiltY]);
+  }, [lens, reduce, tiltX, tiltY]);
 
   const uniforms = useDerivedValue(() => {
     const w = Math.max(size.value.width, 1);
@@ -129,10 +155,12 @@ export default function LivingWashImpl({ noise, playing, lens = null, revealFrom
       uLensR: lensSV.value.r,
       uLensOn: lensSV.value.on,
       uTilt: [tiltX.value, tiltY.value],
+      uLensTint: [tintR.value, tintG.value, tintB.value],
+      uLensAmt: tintAmt.value,
     };
   });
 
-  if (!effect) return <View style={[StyleSheet.absoluteFill, { backgroundColor: noiseById(noise).hex }]} />;
+  if (!effect) return <View style={[StyleSheet.absoluteFill, { backgroundColor: rgbToHex(tonesFor(noise, variant).base) }]} />;
   return (
     <Canvas style={StyleSheet.absoluteFill} onSize={size} pointerEvents="none">
       <Fill>

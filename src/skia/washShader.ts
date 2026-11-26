@@ -29,6 +29,8 @@ uniform float2 uLens;
 uniform float  uLensR;
 uniform float  uLensOn;
 uniform float2 uTilt;
+uniform float3 uLensTint;
+uniform float  uLensAmt;
 
 float hash21(float2 p) {
   p = fract(p * float2(123.34, 456.21));
@@ -108,8 +110,9 @@ half4 main(float2 xy) {
       refr.g = washAt(xy + off * 1.00).g;
       refr.b = washAt(xy + off * 1.07).b;
 
-      // lens body: a touch lighter and clearer than the wash behind it
+      // lens body: a touch lighter and clearer than the wash behind it, then the dial finish (brass, walnut...)
       float3 body = mix(refr, uLight, 0.10 + 0.10 * (1.0 - nr));
+      body = mix(body, uLensTint, uLensAmt * (0.55 + 0.45 * nr));
 
       // fresnel rim + tilt-driven specular
       float rim = smoothstep(0.80, 1.0, nr);
